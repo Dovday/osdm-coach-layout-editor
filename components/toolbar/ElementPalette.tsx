@@ -23,10 +23,10 @@ import {
 } from "lucide-react"
 
 interface ElementPaletteProps {
-  onElementSelect: (code: GraphicalElementCode) => void
+  onElementSelectAction: (code: GraphicalElementCode) => void
 }
 
-export function ElementPalette({ onElementSelect }: ElementPaletteProps) {
+export function ElementPalette({ onElementSelectAction }: ElementPaletteProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const getIconComponent = (iconName: string) => {
@@ -75,7 +75,7 @@ export function ElementPalette({ onElementSelect }: ElementPaletteProps) {
               key={element.code}
               variant="outline"
               size="sm"
-              onClick={() => onElementSelect(element.code)}
+              onClick={() => onElementSelectAction(element.code)}
               className="gap-2 border-neutral-300 hover:border-lime-300 hover:bg-lime-50 hover:text-neutral-900 whitespace-nowrap flex-shrink-0"
             >
               {getIconComponent(element.icon)}
