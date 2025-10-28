@@ -1,65 +1,294 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState, useCallback } from "react"
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels"
+import { Button } from "@/components/ui/button"
+import { CoachCanvas } from "@/components/canvas/CoachCanvas"
+import { JsonEditor } from "@/components/editor/JsonEditor"
+import { ElementPalette } from "@/components/toolbar/ElementPalette"
+import { PropertiesPanel } from "@/components/properties/PropertiesPanel"
+import type { CoachLayout, GraphicalElement } from "@/lib/types/osdm"
+import { DEFAULT_COACH_WIDTH, DEFAULT_COACH_HEIGHT } from "@/lib/types/osdm"
+import { Download, Upload, Sparkles, X, Settings, Sofa } from "lucide-react"
+
+const defaultCoachLayout: CoachLayout = {
+  id: "default-coach",
+  name: "Standard Coach",
+  description: "A standard coach layout with basic elements",
+  width: DEFAULT_COACH_WIDTH,
+  height: DEFAULT_COACH_HEIGHT,
+  elements: [
+    {
+      id: "seat-1",
+      code: "SEAT",
+      orientation: "to right",
+      x: 10,
+      y: 5,
+      size: { width: 3, height: 3 },
+      seatNumber: "1A",
+    },
+    {
+      id: "seat-2",
+      code: "SEAT",
+      orientation: "to left",
+      x: 10,
+      y: 9,
+      size: { width: 3, height: 3 },
+      seatNumber: "1B",
+    },
+    {
+      id: "table-1",
+      code: "TABLE",
+      orientation: "top",
+      x: 15,
+      y: 7,
+      size: { width: 4, height: 2 },
+    },
+    {
+      id: "door-1",
+      code: "ENTRY_EXIT",
+      orientation: "Right",
+      x: 5,
+      y: 7,
+      size: { width: 2, height: 4 },
+    },
+    {
+      id: "door-2",
+      code: "ENTRY_EXIT",
+      orientation: "Left",
+      x: 115,
+      y: 7,
+      size: { width: 2, height: 4 },
+    },
+  ],
+  metadata: {
+    version: "1.0.0",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+}
+
+export default function OSDMEditor() {
+  const [coachLayout, setCoachLayout] = useState<CoachLayout>(defaultCoachLayout)
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
+  const [jsonString, setJsonString] = useState<string>(JSON.stringify(defaultCoachLayout, null, 2))
+  const [jsonError, setJsonError] = useState<string | null>(null)
+  const [isPropertiesPanelVisible, setIsPropertiesPanelVisible] = useState(true)
+
+  // Sync JSON changes to coach layout
+  const handleJsonChange = useCallback((newJson: string) => {
+    setJsonString(newJson)
+    setJsonError(null) // Clear previous errors
+
+    try {
+      // Sanitize the input by removing any problematic control characters
+      const sanitizedJson = newJson
+        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters except newlines and tabs
+        .replace(/\r\n/g, '\n') // Normalize line endings
+        .replace(/\r/g, '\n') // Convert remaining carriage returns to newlines
+        .trim() // Remove leading/trailing whitespace
+
+      // Only attempt to parse if the string is not empty
+      if (sanitizedJson.length === 0) {
+        return
+      }
+
+      const parsed = JSON.parse(sanitizedJson)
+
+      // Validate that the parsed object has the expected structure
+      if (parsed && typeof parsed === 'object' && Array.isArray(parsed.elements)) {
+        setCoachLayout(parsed)
+      } else {
+        setJsonError("Invalid JSON structure: missing required fields")
+      }
+    } catch (error) {
+      // Invalid JSON, keep previous state and show error
+      console.error("Invalid JSON:", error)
+      setJsonError(error instanceof Error ? error.message : "Invalid JSON syntax")
+      // Don't update the layout if JSON is invalid
+    }
+  }, [])
+
+  // Sync coach layout changes to JSON
+  const handleLayoutChange = useCallback((newLayout: CoachLayout) => {
+    setCoachLayout(newLayout)
+    setJsonString(JSON.stringify(newLayout, null, 2))
+    setJsonError(null) // Clear any JSON errors when layout is updated from other sources
+  }, [])
+
+  const selectedElement = coachLayout.elements.find((el) => el.id === selectedElementId)
+
+  const handleDeleteElement = useCallback((elementId: string) => {
+    const newElements = coachLayout.elements.filter((el) => el.id !== elementId)
+    handleLayoutChange({
+      ...coachLayout,
+      elements: newElements,
+    })
+    // Clear selection if the deleted element was selected
+    if (selectedElementId === elementId) {
+      setSelectedElementId(null)
+    }
+  }, [coachLayout, handleLayoutChange, selectedElementId])
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="h-screen flex flex-col bg-neutral-50">
+      {/* Header */}
+      <div className="border-b border-neutral-200 bg-gradient-to-r from-white to-neutral-50 px-6 py-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lime-300 shadow-md">
+              <Sofa className="h-5 w-5 text-neutral-900" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-neutral-900">OSDM Coach Layout Editor</h1>
+              <p className="text-sm text-neutral-600">Design and configure train coach layouts</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-neutral-300 hover:border-lime-300 hover:bg-lime-50 bg-transparent"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <Upload className="h-4 w-4" />
+              Load Template
+            </Button>
+            <Button size="sm" className="gap-2 bg-lime-300 text-neutral-900 hover:bg-lime-400 shadow-md">
+              <Download className="h-4 w-4" />
+              Export JSON
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel - JSON Editor */}
+        <PanelGroup direction="horizontal" className="flex-1">
+          <Panel defaultSize={40} minSize={30}>
+            <div className="h-full flex flex-col bg-white">
+              <div className="border-b border-neutral-200 px-6 py-3 bg-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-1 w-1 rounded-full ${jsonError ? 'bg-red-400' : 'bg-lime-300'}`}></div>
+                    <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">JSON Editor</h2>
+                  </div>
+                  {jsonError && (
+                    <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                      Invalid JSON
+                    </div>
+                  )}
+                </div>
+                {jsonError && (
+                  <div className="mt-2 text-xs text-red-600 bg-red-50 px-3 py-2 rounded border border-red-200">
+                    {jsonError}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <JsonEditor value={jsonString} onChange={handleJsonChange} hasError={!!jsonError} />
+              </div>
+            </div>
+          </Panel>
+
+          <PanelResizeHandle className="w-1 bg-neutral-200 hover:bg-lime-300 transition-colors" />
+
+          {/* Right Panel - Canvas and Tools */}
+          <Panel defaultSize={60} minSize={40}>
+            <div className="h-full flex flex-col bg-white">
+              <div className="border-b border-neutral-200 px-6 py-3 bg-white">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-1 w-1 rounded-full bg-lime-300"></div>
+                  <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Element Palette</h2>
+                </div>
+                <ElementPalette
+                  onElementSelect={(code) => {
+                    const newElement: GraphicalElement = {
+                      id: `element-${Date.now()}`,
+                      code,
+                      orientation: "to right",
+                      x: coachLayout.width / 2,
+                      y: coachLayout.height / 2,
+                      size: { width: 2, height: 2 },
+                    }
+                    handleLayoutChange({
+                      ...coachLayout,
+                      elements: [...coachLayout.elements, newElement],
+                    })
+                  }}
+                />
+              </div>
+
+              <div className="flex-1 flex bg-neutral-50">
+                <div className="flex-1 p-6 overflow-auto">
+                  <div className="h-full rounded-lg border-2 border-neutral-200 bg-white shadow-sm overflow-hidden">
+                    <CoachCanvas
+                      layout={coachLayout}
+                      onLayoutChange={handleLayoutChange}
+                      selectedElementId={selectedElementId}
+                      onElementSelect={(id) => {
+                        setSelectedElementId(id)
+                        if (id) {
+                          setIsPropertiesPanelVisible(true)
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {selectedElement && isPropertiesPanelVisible && (
+                  <div className="w-80 border-l border-neutral-200 bg-white shadow-lg flex-shrink-0">
+                    <div className="border-b border-neutral-200 px-6 py-3 bg-gradient-to-b from-lime-50 to-white">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1 w-1 rounded-full bg-lime-300"></div>
+                          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Properties</h2>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsPropertiesPanelVisible(false)}
+                          className="h-6 w-6 p-0 hover:bg-neutral-100"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <PropertiesPanel
+                      element={selectedElement}
+                      onElementChange={(updatedElement) => {
+                        const newElements = coachLayout.elements.map((el) =>
+                          el.id === updatedElement.id ? updatedElement : el,
+                        )
+                        handleLayoutChange({
+                          ...coachLayout,
+                          elements: newElements,
+                        })
+                      }}
+                      onDeleteElement={handleDeleteElement}
+                    />
+                  </div>
+                )}
+
+                {/* Properties panel toggle button when closed */}
+                {selectedElement && !isPropertiesPanelVisible && (
+                  <div className="w-12 border-l border-neutral-200 bg-white shadow-lg flex-shrink-0 flex flex-col items-center py-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsPropertiesPanelVisible(true)}
+                      className="h-8 w-8 p-0 hover:bg-neutral-100"
+                      title="Show Properties Panel"
+                    >
+                      <Settings className="h-4 w-4 text-neutral-600" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Panel>
+        </PanelGroup>
+      </div>
     </div>
-  );
+  )
 }
