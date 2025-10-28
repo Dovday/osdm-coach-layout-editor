@@ -9,7 +9,7 @@ import { ElementPalette } from "@/components/toolbar/ElementPalette"
 import { PropertiesPanel } from "@/components/properties/PropertiesPanel"
 import type { CoachLayout, GraphicalElement } from "@/lib/types/osdm"
 import { DEFAULT_COACH_WIDTH, DEFAULT_COACH_HEIGHT } from "@/lib/types/osdm"
-import { Download, Upload, Sparkles, X, Settings, Sofa } from "lucide-react"
+import { Download, Upload, X, Settings, Sofa } from "lucide-react"
 
 const defaultCoachLayout: CoachLayout = {
   id: "default-coach",

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useCallback } from "react"
-import type { CoachLayout } from "@/lib/types/osdm"
+import type { CoachLayout, GraphicalElement, GraphicalElementCode } from "@/lib/types/osdm"
 import { getElementByCode } from "@/lib/constants/elements"
 import {
   Armchair,
@@ -32,18 +32,43 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
 
   // Drag and drop state
   const [isDragging, setIsDragging] = useState(false)
-  const [draggedElement, setDraggedElement] = useState<any>(null)
+  const [draggedElement, setDraggedElement] = useState<GraphicalElement | null>(null)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 })
 
   // Resize state
   const [isResizing, setIsResizing] = useState(false)
-  const [resizedElement, setResizedElement] = useState<any>(null)
+  const [resizedElement, setResizedElement] = useState<GraphicalElement | null>(null)
   const [resizeHandle, setResizeHandle] = useState<string>('')
   const [resizeStartSize, setResizeStartSize] = useState({ width: 0, height: 0 })
   const [resizeStartPosition, setResizeStartPosition] = useState({ x: 0, y: 0 })
 
   const cellSize = 24 // Fixed square cell size in pixels
+
+  const getElementSize = (element: GraphicalElement) => {
+    // Use element.size if available, otherwise fallback to defaults
+    if (element.size) {
+      return { width: element.size.width, height: element.size.height }
+    }
+
+    // Fallback to code-based defaults
+    switch (element.code) {
+      case "SEAT":
+        return { width: 3, height: 3 }
+      case "TABLE":
+        return { width: 4, height: 2 }
+      case "ENTRY_EXIT":
+        return { width: 2, height: 4 }
+      case "TOILET_AREA":
+        return { width: 3, height: 3 }
+      case "LUGGAGE_AREA":
+        return { width: 4, height: 3 }
+      case "STAIR_UPWARDS_AREA":
+        return { width: 3, height: 4 }
+      default:
+        return { width: 2, height: 2 }
+    }
+  }
 
   const handleElementClick = (elementId: string) => {
     onElementSelect(elementId)
@@ -64,7 +89,7 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
   }, [cellSize])
 
   // Handle drag start
-  const handleMouseDown = useCallback((e: React.MouseEvent, element: any) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent, element: GraphicalElement) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -130,7 +155,7 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
   }, [isDragging, draggedElement, layout, onLayoutChange, pixelToGrid])
 
   // Handle resize start
-  const handleResizeStart = useCallback((e: React.MouseEvent, element: any, handle: string) => {
+  const handleResizeStart = useCallback((e: React.MouseEvent, element: GraphicalElement, handle: string) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -288,34 +313,8 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
     }
   }
 
-  const getElementSize = (element: any) => {
-    // Use element.size if available, otherwise fallback to defaults
-    if (element.size) {
-      return { width: element.size.width, height: element.size.height }
-    }
-
-    // Fallback to code-based defaults
-    switch (element.code) {
-      case "SEAT":
-        return { width: 3, height: 3 }
-      case "TABLE":
-        return { width: 4, height: 2 }
-      case "ENTRY_EXIT":
-        return { width: 2, height: 4 }
-      case "TOILET_AREA":
-        return { width: 3, height: 3 }
-      case "LUGGAGE_AREA":
-        return { width: 4, height: 3 }
-      case "STAIR_UPWARDS_AREA":
-        return { width: 3, height: 4 }
-      default:
-        return { width: 2, height: 2 }
-    }
-  }
-
-
   const getIconComponent = (code: string) => {
-    const elementInfo = getElementByCode(code as any)
+    const elementInfo = getElementByCode(code as GraphicalElementCode)
     const iconName = elementInfo?.icon || "Square"
 
     switch (iconName) {

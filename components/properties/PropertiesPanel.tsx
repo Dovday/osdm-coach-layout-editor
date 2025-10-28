@@ -14,7 +14,7 @@ interface PropertiesPanelProps {
 }
 
 export function PropertiesPanel({ element, onElementChange, onDeleteElement }: PropertiesPanelProps) {
-  const handleChange = (field: keyof GraphicalElement, value: any) => {
+  const handleChange = (field: keyof GraphicalElement, value: string | number | { width: number; height: number }) => {
     onElementChange({ ...element, [field]: value })
   }
 
@@ -79,8 +79,8 @@ export function PropertiesPanel({ element, onElementChange, onDeleteElement }: P
             type="number"
             value={element.size?.width || 1}
             onChange={(e) => handleChange("size", {
-              ...element.size,
-              width: Number.parseFloat(e.target.value) || 1
+              width: Number.parseFloat(e.target.value) || 1,
+              height: element.size?.height || 1
             })}
             className="border-neutral-300 focus:border-lime-300 focus:ring-lime-300"
           />
@@ -91,7 +91,7 @@ export function PropertiesPanel({ element, onElementChange, onDeleteElement }: P
             type="number"
             value={element.size?.height || 1}
             onChange={(e) => handleChange("size", {
-              ...element.size,
+              width: element.size?.width || 1,
               height: Number.parseFloat(e.target.value) || 1
             })}
             className="border-neutral-300 focus:border-lime-300 focus:ring-lime-300"
