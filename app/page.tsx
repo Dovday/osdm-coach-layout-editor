@@ -202,7 +202,7 @@ export default function OSDMEditor() {
                   <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Element Palette</h2>
                 </div>
                 <ElementPalette
-                  onElementSelectAction={(code) => {
+                  onElementSelect={(code) => {
                     const newElement: GraphicalElement = {
                       id: `element-${Date.now()}`,
                       code,

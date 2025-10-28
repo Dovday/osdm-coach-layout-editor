@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   :root {
@@ -58,11 +56,10 @@
   }
 
   * {
-    border-color: #e5e5e5;
+    @apply border-neutral-200;
   }
   body {
-    background-color: white;
-    color: #171717;
+    @apply bg-white text-neutral-900;
   }
 }
 
