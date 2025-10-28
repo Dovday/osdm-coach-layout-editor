@@ -7,10 +7,73 @@ import { CoachCanvas } from "@/components/canvas/CoachCanvas"
 import { JsonEditor } from "@/components/editor/JsonEditor"
 import { ElementPalette } from "@/components/toolbar/ElementPalette"
 import { PropertiesPanel } from "@/components/properties/PropertiesPanel"
-import type { CoachLayout, GraphicalElement } from "@/lib/types/osdm"
-import { DEFAULT_COACH_WIDTH, DEFAULT_COACH_HEIGHT } from "@/lib/types/osdm"
+import type { CoachLayout, GraphicalElement, CoachDeckLayout, GraphicElement, PlaceLayout, PlaceGroup } from "@/lib/types/osdm"
+import { DEFAULT_COACH_WIDTH, DEFAULT_COACH_HEIGHT, ORIENTATION_MAPPING, DEFAULT_ORIENTATION } from "@/lib/types/osdm"
 import { Download, Upload, X, Settings, Sofa } from "lucide-react"
 
+// OSDM 4.0.0 compliant default coach deck layout
+const defaultCoachDeckLayout: CoachDeckLayout = {
+  id: "default-coach-deck",
+  name: "Standard Coach Deck",
+  dimension: {
+    width: DEFAULT_COACH_WIDTH,
+    height: DEFAULT_COACH_HEIGHT,
+  },
+  lowFloorEntry: false,
+  deckLevel: "SINGLE_DECK",
+  placeGroups: [
+    {
+      serviceClass: "SECOND_CLASS",
+      accommodationType: "SEAT",
+      places: [
+        {
+          number: "1A",
+          rectangle: {
+            position: { x: 10, y: 5, z: 0 },
+            dimension: { width: 3, height: 3 },
+          },
+          orientation: ORIENTATION_MAPPING["to right"],
+        },
+        {
+          number: "1B",
+          rectangle: {
+            position: { x: 10, y: 9, z: 0 },
+            dimension: { width: 3, height: 3 },
+          },
+          orientation: ORIENTATION_MAPPING["to left"],
+        },
+      ],
+    },
+  ],
+  graphicElements: [
+    {
+      rectangle: {
+        position: { x: 15, y: 7, z: 0 },
+        dimension: { width: 4, height: 2 },
+      },
+      orientation: ORIENTATION_MAPPING["top"],
+      code: "TABLE",
+    },
+    {
+      rectangle: {
+        position: { x: 5, y: 7, z: 0 },
+        dimension: { width: 2, height: 4 },
+      },
+      orientation: ORIENTATION_MAPPING["Right"],
+      code: "ENTRY_EXIT",
+    },
+    {
+      rectangle: {
+        position: { x: 115, y: 7, z: 0 },
+        dimension: { width: 2, height: 4 },
+      },
+      orientation: ORIENTATION_MAPPING["Left"],
+      code: "ENTRY_EXIT",
+    },
+  ],
+};
+
+// Legacy default layout for backward compatibility
 const defaultCoachLayout: CoachLayout = {
   id: "default-coach",
   name: "Standard Coach",
@@ -21,7 +84,7 @@ const defaultCoachLayout: CoachLayout = {
     {
       id: "seat-1",
       code: "SEAT",
-      orientation: "to right",
+      orientation: ORIENTATION_MAPPING["to right"],
       x: 10,
       y: 5,
       size: { width: 3, height: 3 },
@@ -30,7 +93,7 @@ const defaultCoachLayout: CoachLayout = {
     {
       id: "seat-2",
       code: "SEAT",
-      orientation: "to left",
+      orientation: ORIENTATION_MAPPING["to left"],
       x: 10,
       y: 9,
       size: { width: 3, height: 3 },
@@ -39,7 +102,7 @@ const defaultCoachLayout: CoachLayout = {
     {
       id: "table-1",
       code: "TABLE",
-      orientation: "top",
+      orientation: ORIENTATION_MAPPING["top"],
       x: 15,
       y: 7,
       size: { width: 4, height: 2 },
@@ -47,7 +110,7 @@ const defaultCoachLayout: CoachLayout = {
     {
       id: "door-1",
       code: "ENTRY_EXIT",
-      orientation: "Right",
+      orientation: ORIENTATION_MAPPING["Right"],
       x: 5,
       y: 7,
       size: { width: 2, height: 4 },
@@ -55,14 +118,14 @@ const defaultCoachLayout: CoachLayout = {
     {
       id: "door-2",
       code: "ENTRY_EXIT",
-      orientation: "Left",
+      orientation: ORIENTATION_MAPPING["Left"],
       x: 115,
       y: 7,
       size: { width: 2, height: 4 },
     },
   ],
   metadata: {
-    version: "1.0.0",
+    version: "4.0.0",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -202,11 +265,11 @@ export default function OSDMEditor() {
                   <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Element Palette</h2>
                 </div>
                 <ElementPalette
-                  onElementSelect={(code) => {
+                  onElementSelectAction={(code) => {
                     const newElement: GraphicalElement = {
                       id: `element-${Date.now()}`,
                       code,
-                      orientation: "to right",
+                      orientation: DEFAULT_ORIENTATION, // Use default orientation
                       x: coachLayout.width / 2,
                       y: coachLayout.height / 2,
                       size: { width: 2, height: 2 },

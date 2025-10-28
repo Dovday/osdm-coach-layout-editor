@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useRef, useState, useCallback } from "react"
-import type { CoachLayout, GraphicalElement, GraphicalElementCode } from "@/lib/types/osdm"
+import type { CoachLayout, GraphicalElement, GraphicalElementCode, Orientation } from "@/lib/types/osdm"
 import { getElementByCode } from "@/lib/constants/elements"
+import { DEGREE_TO_ORIENTATION, DEFAULT_ORIENTATION } from "@/lib/types/osdm"
 import {
   Armchair,
   Bed,
@@ -79,8 +80,10 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
     const rect = tableRef.current?.getBoundingClientRect()
     if (!rect) return { x: 0, y: 0 }
 
-    const relativeX = pixelX - rect.left
-    const relativeY = pixelY - rect.top
+    // Account for the 16px padding (p-4 = 1rem = 16px)
+    const padding = 16
+    const relativeX = pixelX - rect.left - padding
+    const relativeY = pixelY - rect.top - padding
 
     return {
       x: Math.floor(relativeX / cellSize),
@@ -346,42 +349,54 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
   }
 
 
-  const getRotationAngle = (orientation: string): number => {
-    switch (orientation) {
-      case "to right":
-      case "Right":
-        return 0
-      case "to left":
-      case "Left":
-        return 180
-      case "up":
-      case "Top":
-        return -90
-      case "bottom":
-      case "Bottom":
-        return 90
-      default:
-        return 0
+  const getRotationAngle = (orientation: Orientation): number => {
+    // Convert orientation degrees to CSS rotation angle for content alignment
+    // The content should be rotated to align with the orientation direction
+    const currentOrientation = orientation ?? DEFAULT_ORIENTATION;
+    const normalizedDegrees = ((currentOrientation % 360) + 360) % 360;
+
+    // For proper text alignment with orientation:
+    // 0° (to right): content reads bottom to top → rotate -90° (anticlockwise)
+    // 90° (bottom): content reads left to right → rotate 0°
+    // 180° (to left): content reads top to bottom → rotate 90°
+    // 270° (up): content reads right to left → rotate 180°
+
+    switch (normalizedDegrees) {
+      case 0: return -90;   // to right: bottom to top
+      case 90: return 0;    // bottom: left to right
+      case 180: return 90;  // to left: top to bottom
+      case 270: return 180; // up: right to left
+      default: return -90;  // default to "to right" alignment
     }
   }
 
-  const getOrientationArrow = (orientation: string): string => {
-    switch (orientation) {
-      case "to right":
-      case "Right":
-        return "→"
-      case "to left":
-      case "Left":
-        return "←"
-      case "up":
-      case "Top":
-        return "↑"
-      case "bottom":
-      case "Bottom":
-        return "↓"
-      default:
-        return ""
+  const getOrientationArrow = (orientation: Orientation): string => {
+    // Convert degrees to arrow symbol
+    const currentOrientation = orientation ?? DEFAULT_ORIENTATION;
+    const normalizedDegrees = ((currentOrientation % 360) + 360) % 360;
+
+    if (normalizedDegrees === 0) return "→";
+    if (normalizedDegrees === 90) return "↓";
+    if (normalizedDegrees === 180) return "←";
+    if (normalizedDegrees === 270) return "↑";
+
+    // For other angles, show the degree value
+    return `${normalizedDegrees}°`;
+  }
+
+  const shouldShowOrientationArrow = (orientation: Orientation): boolean => {
+    // Always show orientation arrow to help users understand element direction
+    return true;
+  }
+
+  const getOrientationArrowStyle = (orientation: Orientation): string => {
+    const currentOrientation = orientation ?? DEFAULT_ORIENTATION;
+    const normalizedDegrees = ((currentOrientation % 360) + 360) % 360;
+    // Make default orientation (0°) more subtle
+    if (normalizedDegrees === 0) {
+      return "absolute top-1 right-1 text-xs font-bold text-white bg-black bg-opacity-50 rounded px-1";
     }
+    return "absolute top-1 right-1 text-xs font-bold text-white bg-black bg-opacity-70 rounded px-1";
   }
 
   return (
@@ -406,7 +421,7 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
           transformOrigin: "center",
         }}
       >
-        <div className="max-w-full max-h-full overflow-auto">
+        <div className="max-w-full max-h-full overflow-auto p-4">
           <table
             ref={tableRef}
             className="border-collapse bg-white border-2 border-dashed border-neutral-300 mx-auto"
@@ -474,22 +489,22 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
                         >
                           {/* Rotated content container */}
                           <div
-                            className="orientation-rotate flex items-center justify-center"
+                            className="flex flex-col items-center justify-center"
                             style={{
                               transform: `rotate(${getRotationAngle(element.orientation)}deg)`,
                             }}
                           >
                             {getIconComponent(element.code)}
                             {element.code === "SEAT" && element.seatNumber && (
-                              <div className="ml-1 text-xs font-bold text-white">
+                              <div className="text-xs font-bold text-white mt-1">
                                 {element.seatNumber}
                               </div>
                             )}
                           </div>
 
                           {/* Orientation arrow label */}
-                          {element.orientation !== "-" && (
-                            <div className="absolute top-1 right-1 text-xs font-bold text-white bg-black bg-opacity-70 rounded px-1">
+                          {shouldShowOrientationArrow(element.orientation) && (
+                            <div className={getOrientationArrowStyle(element.orientation)}>
                               {getOrientationArrow(element.orientation)}
                             </div>
                           )}
@@ -535,7 +550,7 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
       {/* Dragging preview */}
       {isDragging && draggedElement && (
         <div
-          className="fixed pointer-events-none z-50 flex items-center justify-center text-white rounded-sm shadow-lg opacity-80"
+          className="fixed pointer-events-none z-50 flex items-center justify-center text-white rounded-sm shadow-lg opacity-80 relative"
           style={{
             left: dragPosition.x - dragOffset.x,
             top: dragPosition.y - dragOffset.y,
@@ -545,17 +560,22 @@ export function CoachCanvas({ layout, onLayoutChange, selectedElementId, onEleme
           }}
         >
           <div
-            className="flex items-center justify-center"
+            className="flex flex-col items-center justify-center"
             style={{
               transform: `rotate(${getRotationAngle(draggedElement.orientation)}deg)`,
             }}
           >
             {getIconComponent(draggedElement.code)}
             {draggedElement.code === "SEAT" && draggedElement.seatNumber && (
-              <div className="ml-1 text-xs font-bold text-white">
+              <div className="text-xs font-bold text-white mt-1">
                 {draggedElement.seatNumber}
               </div>
             )}
+          </div>
+
+          {/* Orientation arrow for dragging preview */}
+          <div className={getOrientationArrowStyle(draggedElement.orientation)}>
+            {getOrientationArrow(draggedElement.orientation)}
           </div>
         </div>
       )}

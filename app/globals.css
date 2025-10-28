@@ -56,10 +56,11 @@
   }
 
   * {
-    @apply border-neutral-200;
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-white text-neutral-900;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
 

@@ -1,11 +1,12 @@
 "use client"
 
-import type { GraphicalElement } from "@/lib/types/osdm"
+import type { GraphicalElement, Orientation } from "@/lib/types/osdm"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Trash2 } from "lucide-react"
+import { DEGREE_TO_ORIENTATION, ORIENTATION_MAPPING, DEFAULT_ORIENTATION } from "@/lib/types/osdm"
 
 interface PropertiesPanelProps {
   element: GraphicalElement
@@ -17,6 +18,19 @@ export function PropertiesPanel({ element, onElementChange, onDeleteElement }: P
   const handleChange = (field: keyof GraphicalElement, value: string | number | { width: number; height: number }) => {
     onElementChange({ ...element, [field]: value })
   }
+
+  // Convert orientation degrees to display string
+  const getOrientationDisplayValue = (orientation: Orientation): string => {
+    return DEGREE_TO_ORIENTATION[orientation] || `${orientation}°`;
+  }
+
+  // Convert orientation string back to degrees
+  const getOrientationFromString = (orientationString: string): Orientation => {
+    return ORIENTATION_MAPPING[orientationString] || DEFAULT_ORIENTATION;
+  }
+
+  // Get current orientation or default
+  const currentOrientation = element.orientation ?? DEFAULT_ORIENTATION;
 
   return (
     <div className="p-6 space-y-6">
@@ -36,19 +50,36 @@ export function PropertiesPanel({ element, onElementChange, onDeleteElement }: P
 
       <div className="space-y-2">
         <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">Orientation</Label>
-        <Select value={element.orientation} onValueChange={(value: string) => handleChange("orientation", value)}>
+        <Select
+          value={getOrientationDisplayValue(currentOrientation)}
+          onValueChange={(value: string) => handleChange("orientation", getOrientationFromString(value))}
+        >
           <SelectTrigger className="border-neutral-300 focus:border-lime-300 focus:ring-lime-300 bg-white">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-white">
-            <SelectItem value="to right">To Right</SelectItem>
-            <SelectItem value="to left">To Left</SelectItem>
-            <SelectItem value="top">Top</SelectItem>
-            <SelectItem value="bottom">Bottom</SelectItem>
-            <SelectItem value="Right">Right</SelectItem>
-            <SelectItem value="Left">Left</SelectItem>
+            <SelectItem value="to right">To Right (0°)</SelectItem>
+            <SelectItem value="to left">To Left (180°)</SelectItem>
+            <SelectItem value="up">Up (270°)</SelectItem>
+            <SelectItem value="bottom">Bottom (90°)</SelectItem>
+            <SelectItem value="Right">Right (0°)</SelectItem>
+            <SelectItem value="Left">Left (180°)</SelectItem>
+            <SelectItem value="Top">Top (270°)</SelectItem>
+            <SelectItem value="Bottom">Bottom (90°)</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">Orientation (Degrees)</Label>
+        <Input
+          type="number"
+          value={currentOrientation}
+          onChange={(e) => handleChange("orientation", Number.parseInt(e.target.value) || DEFAULT_ORIENTATION)}
+          min="0"
+          max="359"
+          className="border-neutral-300 focus:border-lime-300 focus:ring-lime-300"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

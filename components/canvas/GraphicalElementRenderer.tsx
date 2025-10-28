@@ -1,6 +1,6 @@
 "use client";
 
-import { GraphicalElement, GRID_SIZE } from "@/lib/types/osdm";
+import { GraphicalElement, GRID_SIZE, Orientation, DEFAULT_ORIENTATION } from "@/lib/types/osdm";
 
 interface GraphicalElementRendererProps {
   element: GraphicalElement;
@@ -157,26 +157,24 @@ export function GraphicalElementRenderer({
     );
   };
 
-  const getRotation = (orientation: string) => {
-    switch (orientation) {
-      case "to right":
-        return 0;
-      case "to left":
-        return 180;
-      case "up":
-        return -90;
-      case "bottom":
-        return 90;
-      case "Left":
-        return 0;
-      case "Top":
-        return -90;
-      case "Right":
-        return 180;
-      case "Bottom":
-        return 90;
-      default:
-        return 0;
+  const getRotation = (orientation: Orientation) => {
+    // Convert orientation degrees to CSS rotation angle for content alignment
+    // The content should be rotated to align with the orientation direction
+    const currentOrientation = orientation ?? DEFAULT_ORIENTATION;
+    const normalizedDegrees = ((currentOrientation % 360) + 360) % 360;
+
+    // For proper text alignment with orientation:
+    // 0° (to right): content reads bottom to top → rotate -90° (anticlockwise)
+    // 90° (bottom): content reads left to right → rotate 0°
+    // 180° (to left): content reads top to bottom → rotate 90°
+    // 270° (up): content reads right to left → rotate 180°
+
+    switch (normalizedDegrees) {
+      case 0: return -90;   // to right: bottom to top
+      case 90: return 0;    // bottom: left to right
+      case 180: return 90;  // to left: top to bottom
+      case 270: return 180; // up: right to left
+      default: return -90;  // default to "to right" alignment
     }
   };
 
@@ -244,11 +242,11 @@ export function GraphicalElementRenderer({
         />
       )}
 
-      {/* Element label */}
+      {/* Element label - positioned below the icon */}
       {element.seatNumber && (
         <text
           x={x + width/2}
-          y={y + height/2}
+          y={y + height/2 + 6}
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize="8"

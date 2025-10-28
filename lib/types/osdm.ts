@@ -1,108 +1,108 @@
-// OSDM Graphical Elements Types
-export type Orientation =
-  | "to right"
-  | "to left"
-  | "up"
-  | "bottom"
-  | "top"
-  | "Left"
-  | "Top"
-  | "Right"
-  | "Bottom"
-  | "top-to-bottom"
-  | "-";
+// OSDM 4.0.0 Types - Based on UIC 90918-10 specification
 
-export type GraphicalElementCode =
-  // Seats & Places
-  | "SEAT"
-  | "BERTH"
-  | "COUCHETTE"
-  | "WHEELCHAIR_SPACE"
-  // Tables
-  | "TABLE"
-  | "BIG_TABLE"
-  // Walls
-  | "WALL_LEFT_3"
-  | "WALL_RIGHT_3"
-  | "WALL_LEFT_2"
-  | "WALL_RIGHT_2"
-  | "T_WALL_COMPARTMENTS_3"
-  | "T_WALL_COMPARTMENTS_2"
-  | "WALL_COMPARTMENTS_2"
-  | "WALL_COMPARTMENTS_1"
-  | "WALL_END_TO_END"
-  | "WALL_MOVABLE"
-  // Arrows
-  | "ARROW_UPPER_LEVEL_LEFT"
-  | "ARROW_LOWER_LEVEL_LEFT"
-  | "ARROW_UPPER_LEVEL_RIGHT"
-  | "ARROW_LOWER_LEVEL_RIGHT"
-  // Service Areas
-  | "SECOND_CLASS_AREA"
-  | "FIRST_CLASS_AREA"
-  | "BAR_AREA"
-  | "MOBILE_PHONE_AREA"
-  | "MOBILE_PHONE_FORBIDDEN_AREA"
-  | "PRM_AREA"
-  | "FAMILY_AREA"
-  | "RESTAURANT_AREA"
-  | "BICYCLE_AREA"
-  | "LUGGAGE_AREA"
-  | "LUGGAGE_LOCKER"
-  | "CONFERENCE"
-  | "PRAM_AREA"
-  | "WARDROBE_AREA"
-  | "BIN"
-  | "TOILET_AREA"
-  | "SILENCE_AREA"
-  | "PLAYGROUND_AREA"
-  | "NON_SMOKING_AREA"
-  | "POWER_SOCKET"
-  | "PRIORITY_SEAT"
-  | "WIFI_AREA"
-  | "PRM_TOILET"
-  | "AIR_CONDITIONING"
-  | "USB_SOCKET"
-  | "RECLINABLE_SEAT"
-  | "WINDOW"
-  | "STAIR_UPWARDS_AREA"
-  | "STAIR_DOWNWARDS_AREA"
-  | "WORKING_AREA"
-  | "ANTI_ALLERGIC_AREA"
-  | "MEETING_AREA_7"
-  | "MEETING_AREA_12"
-  | "SKI_AREA"
-  | "STAFF_AREA"
-  | "PHONE_BOOTH"
-  | "T_LOOP"
-  | "PETS_AREA"
-  | "SLEEPING_CABIN_TOILET_SHOWER"
-  | "CONNECTABLE_COMPARTMENTS"
-  | "SHOWER"
-  | "BABY_CARE_TABLE"
-  | "TODDLER_AREA"
-  | "WHEELCHAIR_PUSH_BUTTON"
-  | "SINK"
-  | "WOMEN_COMPARTMENT"
-  | "WINDOW_2"
-  | "WINDOW_3"
-  // Doors
-  | "DOOR_OPENING_LEFT"
-  | "DOOR_OPENING_RIGHT"
-  | "SLIDING_DOOR"
-  | "ENTRY_EXIT"
-  // Coach Structure
-  | "DRIVER_AREA"
-  | "TRAIN_DRIVER_AREA"
-  | "BUS_DRIVER_AREA"
-  | "COACH_PASSAGE"
-  | "COACH_WALL_NO_PASSAGE"
-  | "COMPARTMENT_WALL"
-  | "COMPARTMENT_PASSAGE"
-  | "COMPARTMENT_PASSAGE_LOW"
-  | "COMPARTMENT_PASSAGE_HIGH"
-  | "TABLE_RESTAURANT"
-  | "MULTI_FUNCTION_AREA";
+// Orientation is now an integer representing degrees (0-359)
+export type Orientation = number;
+
+// Default orientation constant
+export const DEFAULT_ORIENTATION: Orientation = 0; // "to right"
+
+// Grid position in 3D space
+export interface GridPosition {
+  x: number; // integer, format: int32
+  y: number; // integer, format: int32
+  z: number; // integer, format: int32
+}
+
+// Grid dimension with optional border radius
+export interface GridDimension {
+  width: number; // integer, format: int32
+  height: number; // integer, format: int32
+  borderRadius?: BorderRadius;
+}
+
+// Border radius for rounded corners
+export interface BorderRadius {
+  topLeft?: number | null;
+  topRight?: number | null;
+  bottomRight?: number | null;
+  bottomLeft?: number | null;
+}
+
+// Rectangle geometry combining position and dimension
+export interface RectangleGeometry {
+  position: GridPosition;
+  dimension: GridDimension;
+}
+
+// Graphic element code - extensible enum from OSDM code list
+// Reference: https://osdm.io/spec/catalog-of-code-lists/#GraphicsItems
+export type GraphicElementCode = string;
+
+// Graphic element in coach deck layout
+export interface GraphicElement {
+  rectangle: RectangleGeometry;
+  orientation: Orientation;
+  code: GraphicElementCode;
+}
+
+// Service icon code - extensible enum from OSDM code list
+export type ServiceIconCode = string;
+
+// Service icon representing a service
+export interface ServiceIcon {
+  rectangle: RectangleGeometry;
+  code: ServiceIconCode;
+}
+
+// Place property - extensible enum from OSDM code list
+export type PlaceProperty = string;
+
+// Place layout (seat, bicycle hook, etc.)
+export interface PlaceLayout {
+  number: string; // unique per coach deck
+  rectangle: RectangleGeometry;
+  orientation: Orientation;
+  placeProperties?: PlaceProperty[];
+}
+
+// Service class type
+export type ServiceClassType = string;
+
+// Accommodation type
+export type AccommodationType = string;
+
+// Accommodation sub type
+export type AccommodationSubType = string;
+
+// Place group grouping places by service class
+export interface PlaceGroup {
+  serviceClass: ServiceClassType;
+  accommodationType?: AccommodationType;
+  accommodationSubType?: AccommodationSubType;
+  places: PlaceLayout[];
+}
+
+// Coach deck level
+export type CoachDeckLevel =
+  | "SINGLE_DECK"
+  | "LOWER_DECK"
+  | "MIDDLE_DECK"
+  | "UPPER_DECK";
+
+// Coach deck layout - OSDM 4.0.0 compliant structure
+export interface CoachDeckLayout {
+  id: string;
+  name: string;
+  dimension: GridDimension;
+  lowFloorEntry?: boolean | null;
+  deckLevel: CoachDeckLevel;
+  placeGroups?: PlaceGroup[];
+  graphicElements?: GraphicElement[];
+  serviceIcons?: ServiceIcon[];
+}
+
+// Legacy types for backward compatibility during migration
+export type GraphicalElementCode = GraphicElementCode;
 
 export interface GraphicalElement {
   id: string;
@@ -153,3 +153,26 @@ export interface ElementCategory {
 export const DEFAULT_COACH_WIDTH = 120; // 24m scaled to 120 units
 export const DEFAULT_COACH_HEIGHT = 14; // 2.8m scaled to 14 units
 export const GRID_SIZE = 20; // pixels per grid unit
+
+// Orientation mapping from legacy string values to degrees
+export const ORIENTATION_MAPPING: Record<string, number> = {
+  "to right": 0,
+  "to left": 180,
+  "up": 270,
+  "bottom": 90,
+  "top": 270,
+  "Left": 180,
+  "Top": 270,
+  "Right": 0,
+  "Bottom": 90,
+  "top-to-bottom": 270,
+  "-": 0,
+};
+
+// Reverse mapping for display purposes
+export const DEGREE_TO_ORIENTATION: Record<number, string> = {
+  0: "to right",
+  90: "bottom",
+  180: "to left",
+  270: "up",
+};

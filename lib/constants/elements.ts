@@ -1,4 +1,4 @@
-import { ElementCategory, GraphicalElementCode, Orientation } from "../types/osdm";
+import { ElementCategory, GraphicalElementCode, Orientation, ORIENTATION_MAPPING, DEFAULT_ORIENTATION } from "../types/osdm";
 
 export const ELEMENT_CATEGORIES: ElementCategory[] = [
   {
@@ -9,25 +9,25 @@ export const ELEMENT_CATEGORIES: ElementCategory[] = [
         code: "SEAT",
         name: "Seat",
         icon: "Armchair",
-        orientations: ["to right", "to left", "up", "bottom"]
+        orientations: [ORIENTATION_MAPPING["to right"], ORIENTATION_MAPPING["to left"], ORIENTATION_MAPPING["up"], ORIENTATION_MAPPING["bottom"]]
       },
       {
         code: "BERTH",
         name: "Berth",
         icon: "Bed",
-        orientations: ["to left", "to right"]
+        orientations: [ORIENTATION_MAPPING["to left"], ORIENTATION_MAPPING["to right"]]
       },
       {
         code: "COUCHETTE",
         name: "Couchette",
         icon: "Bed",
-        orientations: ["to right", "to left"]
+        orientations: [ORIENTATION_MAPPING["to right"], ORIENTATION_MAPPING["to left"]]
       },
       {
         code: "WHEELCHAIR_SPACE",
         name: "Wheelchair Space",
         icon: "Wheelchair",
-        orientations: ["-"]
+        orientations: [ORIENTATION_MAPPING["-"]]
       }
     ]
   },
@@ -39,13 +39,13 @@ export const ELEMENT_CATEGORIES: ElementCategory[] = [
         code: "TABLE",
         name: "Table",
         icon: "Table",
-        orientations: ["top", "bottom"]
+        orientations: [ORIENTATION_MAPPING["top"], ORIENTATION_MAPPING["bottom"]]
       },
       {
         code: "BIG_TABLE",
         name: "Big Table",
         icon: "Table",
-        orientations: ["top", "bottom"]
+        orientations: [ORIENTATION_MAPPING["top"], ORIENTATION_MAPPING["bottom"]]
       }
     ]
   },
@@ -57,25 +57,25 @@ export const ELEMENT_CATEGORIES: ElementCategory[] = [
         code: "WALL_LEFT_2",
         name: "Small Wall Left",
         icon: "Square",
-        orientations: ["bottom", "top"]
+        orientations: [ORIENTATION_MAPPING["bottom"], ORIENTATION_MAPPING["top"]]
       },
       {
         code: "WALL_RIGHT_2",
         name: "Small Wall Right",
         icon: "Square",
-        orientations: ["bottom", "top"]
+        orientations: [ORIENTATION_MAPPING["bottom"], ORIENTATION_MAPPING["top"]]
       },
       {
         code: "WALL_COMPARTMENTS_2",
         name: "Compartment Wall",
         icon: "Square",
-        orientations: ["bottom", "top"]
+        orientations: [ORIENTATION_MAPPING["bottom"], ORIENTATION_MAPPING["top"]]
       },
       {
         code: "WALL_END_TO_END",
         name: "End-to-End Wall",
         icon: "Square",
-        orientations: ["top-to-bottom"]
+        orientations: [ORIENTATION_MAPPING["top-to-bottom"]]
       }
     ]
   },
@@ -87,25 +87,25 @@ export const ELEMENT_CATEGORIES: ElementCategory[] = [
         code: "DOOR_OPENING_LEFT",
         name: "Door Left",
         icon: "DoorOpen",
-        orientations: ["Left", "Top", "Right", "Bottom"]
+        orientations: [ORIENTATION_MAPPING["Left"], ORIENTATION_MAPPING["Top"], ORIENTATION_MAPPING["Right"], ORIENTATION_MAPPING["Bottom"]]
       },
       {
         code: "DOOR_OPENING_RIGHT",
         name: "Door Right",
         icon: "DoorOpen",
-        orientations: ["Left", "Top", "Right", "Bottom"]
+        orientations: [ORIENTATION_MAPPING["Left"], ORIENTATION_MAPPING["Top"], ORIENTATION_MAPPING["Right"], ORIENTATION_MAPPING["Bottom"]]
       },
       {
         code: "SLIDING_DOOR",
         name: "Sliding Door",
         icon: "DoorOpen",
-        orientations: ["Left", "Top", "Right", "Bottom"]
+        orientations: [ORIENTATION_MAPPING["Left"], ORIENTATION_MAPPING["Top"], ORIENTATION_MAPPING["Right"], ORIENTATION_MAPPING["Bottom"]]
       },
       {
         code: "ENTRY_EXIT",
         name: "Entry/Exit",
         icon: "DoorOpen",
-        orientations: ["Left", "Top", "Right", "Bottom"]
+        orientations: [ORIENTATION_MAPPING["Left"], ORIENTATION_MAPPING["Top"], ORIENTATION_MAPPING["Right"], ORIENTATION_MAPPING["Bottom"]]
       }
     ]
   },
@@ -117,37 +117,37 @@ export const ELEMENT_CATEGORIES: ElementCategory[] = [
         code: "TOILET_AREA",
         name: "Toilet",
         icon: "Wc",
-        orientations: ["-"]
+        orientations: [ORIENTATION_MAPPING["-"]]
       },
       {
         code: "LUGGAGE_AREA",
         name: "Luggage Area",
         icon: "Luggage",
-        orientations: ["-"]
+        orientations: [ORIENTATION_MAPPING["-"]]
       },
       {
         code: "BICYCLE_AREA",
         name: "Bicycle Area",
         icon: "Bike",
-        orientations: ["-"]
+        orientations: [ORIENTATION_MAPPING["-"]]
       },
       {
         code: "FIRST_CLASS_AREA",
         name: "First Class",
         icon: "Star",
-        orientations: ["-"]
+        orientations: [ORIENTATION_MAPPING["-"]]
       },
       {
         code: "SECOND_CLASS_AREA",
         name: "Second Class",
         icon: "Star",
-        orientations: ["-"]
+        orientations: [ORIENTATION_MAPPING["-"]]
       },
       {
         code: "WIFI_AREA",
         name: "WiFi Area",
         icon: "Wifi",
-        orientations: ["-"]
+        orientations: [ORIENTATION_MAPPING["-"]]
       }
     ]
   }
@@ -163,5 +163,5 @@ export const getElementByCode = (code: GraphicalElementCode) => {
 
 export const getDefaultOrientation = (code: GraphicalElementCode): Orientation => {
   const element = getElementByCode(code);
-  return element?.orientations[0] || "-";
+  return element?.orientations[0] || DEFAULT_ORIENTATION;
 };
